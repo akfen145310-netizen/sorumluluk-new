@@ -1,0 +1,6 @@
+{
+  "name": "Sorumluluk Takibi",
+  "description": "Öğrenci sorumluluk ve karakter gelişimi uygulaması. Görev takibi, ebeveyn onayı, seri ve elmas ödül sistemi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
