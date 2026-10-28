@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Button
@@ -73,6 +74,7 @@ fun IntroductionScreen(
     onOpenParentDemo: () -> Unit,
     onOpenTeacherDemo: () -> Unit,
     onOpenWebPortal: () -> Unit = {},
+    onOpenDesktopWorkstation: () -> Unit = {},
     onNavigateToRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -453,6 +455,89 @@ fun IntroductionScreen(
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Bilgisayar Sitesini Aç & Cep Versiyonu İndir (.APK)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 5. MASAÜSTÜ VERSİYONU & PROGRAM İLE CANLI İRTİBAT (DESKTOP WORKSTATION)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .clickable { onOpenDesktopWorkstation() }
+                .testTag("intro_desktop_workstation_card"),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF8FAFC)
+            ),
+            border = BorderStroke(1.5.dp, Color(0xFF3B82F6))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = Color(0xFF1D4ED8),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Laptop, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "🖥️ Masaüstü Versiyonu",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E3A8A)
+                            )
+                            Text(
+                                text = "Canlı İrtibatlı • Tüm Özellikler • SQLite Eşitleme",
+                                fontSize = 11.sp,
+                                color = Color(0xFF2563EB)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        color = Color(0xFF1D4ED8),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            text = "CANLI İRTİBAT",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Mobil uygulamanın birebir aynı özelliklerine (Öğrenci 20 görev, Veli onay/özel liste, Öğretmen sıralama ve analiz) sahip masaüstü çalışma masası. Program ile anlık canlı irtibat kurar ve verileri çift yönlü eşitler.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF1E3A8A).copy(alpha = 0.85f)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(
+                    onClick = onOpenDesktopWorkstation,
+                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D4ED8))
+                ) {
+                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Masaüstü Versiyonunu Aç (Canlı İrtibatlı)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
                 }
             }
         }

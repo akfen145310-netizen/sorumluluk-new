@@ -25,18 +25,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FamilyRestroom
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -90,11 +94,10 @@ import com.example.ui.theme.TextMuted
 import kotlinx.coroutines.launch
 
 /**
- * Bilgisayar Web Sitesi & Masaüstü Portalı Görünümü:
- * - Masaüstü web sitesi arayüzü sunar.
- * - Siteden çalışan interaktif "Cep Telefonu Simülatörü" içerir (öğrenci, veli, öğretmen modları).
- * - Siteden cep telefonu versiyonunu (.APK) indirme bağlantısı, QR kod ve kurulum rehberi sağlar.
- * - Kullanıcı dilediğinde doğrudan tam ekran cep telefonu moduna geçiş yapabilir.
+ * Sadece bu uygulamaya ("Sorumluluk ve Değerler Eğitimi") özel tasarlanmış resmi web sitesi.
+ * - Bu web sitesi üzerinden uygulamaya doğrudan ulaşılabilir (Öğrenci, Veli, Öğretmen portalları).
+ * - Sitede ayrıca Android APK uygulama arayüzünü doğrudan indirmek için özel indirme linkleri,
+ *   karekod ve kurulum rehberi sunar.
  */
 @Composable
 fun WebPortalScreen(
@@ -103,6 +106,7 @@ fun WebPortalScreen(
     onOpenParentDemo: () -> Unit,
     onOpenTeacherDemo: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onOpenDesktopWorkstation: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -111,31 +115,48 @@ fun WebPortalScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
 
-    // Canlı web sitesi ve mobil indirme URL'si
-    val mobileDownloadUrl = "https://ais-pre-nu7hpo5lbggmotbcu6l2ij-249386399444.europe-west2.run.app"
+    // Uygulamanın canlı web erişim adresi ve doğrudan APK indirme bağlantısı
+    val webAppUrl = "https://ais-pre-nu7hpo5lbggmotbcu6l2ij-249386399444.europe-west2.run.app"
+    val directApkDownloadUrl = "$webAppUrl/app-debug.apk"
 
     var selectedPreviewTab by remember { mutableIntStateOf(0) }
 
-    fun triggerDownload() {
+    fun triggerApkDownload() {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mobileDownloadUrl))
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(webAppUrl))
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("🌐 Cep versiyonu indirme bağlantısı tarayıcıda açıldı.")
+                snackbarHostState.showSnackbar("📥 APK indirme sayfası tarayıcıda açıldı.")
             }
         } catch (_: Exception) {
-            clipboardManager.setText(AnnotatedString(mobileDownloadUrl))
+            clipboardManager.setText(AnnotatedString(webAppUrl))
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("📋 İndirme linki panoya kopyalandı! Tarayıcınızdan indirebilirsiniz.")
+                snackbarHostState.showSnackbar("📋 APK indirme bağlantısı kopyalandı! Tarayıcınızdan indirebilirsiniz.")
+            }
+        }
+    }
+
+    fun openWebVersionInBrowser() {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(webAppUrl))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("🌐 Web sitesi tarayıcınızda açılıyor...")
+            }
+        } catch (_: Exception) {
+            clipboardManager.setText(AnnotatedString(webAppUrl))
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("📋 Web adresi panoya kopyalandı.")
             }
         }
     }
 
     fun copyDownloadLink() {
-        clipboardManager.setText(AnnotatedString(mobileDownloadUrl))
+        clipboardManager.setText(AnnotatedString(webAppUrl))
         coroutineScope.launch {
-            snackbarHostState.showSnackbar("✓ Cep telefonu indirme bağlantısı kopyalandı!")
+            snackbarHostState.showSnackbar("✓ APK indirme bağlantısı kopyalandı!")
         }
     }
 
@@ -150,9 +171,9 @@ fun WebPortalScreen(
                 .padding(innerPadding)
                 .verticalScroll(scrollState)
         ) {
-            // ==========================================
-            // 1. MASAÜSTÜ SİTE ÜST MENÜ BAR (NAVBAR)
-            // ==========================================
+            // =========================================================================
+            // 1. WEB SİTESİ ÜST MENÜ BAR (NAVBAR)
+            // =========================================================================
             Surface(
                 color = Color.White,
                 shadowElevation = 2.dp,
@@ -189,7 +210,7 @@ fun WebPortalScreen(
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Din Keşif Atölyesi",
+                                        text = "Sorumluluk & Değerler",
                                         fontWeight = FontWeight.ExtraBold,
                                         fontSize = 16.sp,
                                         color = TextDark
@@ -201,7 +222,7 @@ fun WebPortalScreen(
                                         border = BorderStroke(1.dp, BrandBorderMint)
                                     ) {
                                         Text(
-                                            text = "WEB PORTALI",
+                                            text = "RESMİ WEB SİTESİ",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 9.sp,
                                             color = BrandPrimary,
@@ -210,7 +231,7 @@ fun WebPortalScreen(
                                     }
                                 }
                                 Text(
-                                    text = "Sorumluluk ve Değerler Eğitimi Platformu",
+                                    text = "Karakter Gelişimi & Günlük Görev Portalı",
                                     fontSize = 11.sp,
                                     color = TextMuted,
                                     fontWeight = FontWeight.Medium
@@ -220,16 +241,30 @@ fun WebPortalScreen(
 
                         // Üst Bar Hızlı Geçiş Butonları
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Button(
+                            if (onOpenDesktopWorkstation != null) {
+                                Button(
+                                    onClick = onOpenDesktopWorkstation,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                    modifier = Modifier.padding(end = 8.dp).testTag("portal_open_desktop_workstation_btn")
+                                ) {
+                                    Icon(Icons.Default.Laptop, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("🖥️ Masaüstü Versiyonu", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            OutlinedButton(
                                 onClick = onNavigateToMobile,
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                                border = BorderStroke(1.5.dp, BrandPrimary),
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                                 modifier = Modifier.testTag("portal_switch_to_mobile_btn")
                             ) {
-                                Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("📱 Cep Moduna Geç", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("📱 Cep Moduna Geç", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = BrandPrimary)
                             }
                         }
                     }
@@ -237,11 +272,11 @@ fun WebPortalScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // ==========================================
-            // 2. HERO BÖLÜMÜ (Masaüstü Tanıtım & İndirme)
-            // ==========================================
+            // =========================================================================
+            // 2. HERO BÖLÜMÜ: UYGULAMANIN RESMİ WEB SİTESİ
+            // =========================================================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -269,10 +304,10 @@ fun WebPortalScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.Laptop, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Language, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Bilgisayar Web Sitesi & Cep Telefonu Portalı",
+                                    text = "Sadece Bu Uygulamaya Özel Web Portalı",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = BrandPrimary
@@ -281,7 +316,7 @@ fun WebPortalScreen(
                         }
 
                         Text(
-                            text = "Din Keşif Atölyesi Web Sitesi",
+                            text = "Sorumluluk ve Değerler Eğitimi",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = TextDark,
@@ -291,7 +326,7 @@ fun WebPortalScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Bu web sitesi üzerinden tüm sınıfın günlük 20 sorumluluk görevini, rozetleri ve haftalık duyuruları takip edebilirsiniz. İsterseniz aşağıdaki bağlantı veya karekod ile cep telefonu versiyonunu (.APK) indirip doğrudan akıllı telefonunuzda kullanabilirsiniz.",
+                            text = "Bu web sitesi, öğrencilerimizin günlük 20 sorumluluk görevini, rozet kazanımlarını, veli onaylarını ve öğretmen sınıf yönetimini doğrudan tarayıcı üzerinden yürütmek üzere hazırlanmıştır. Dilerseniz hemen aşağıdan uygulamanın Android APK dosyasını indirerek telefonunuzda da kullanabilirsiniz.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextMuted,
                             textAlign = TextAlign.Center,
@@ -300,37 +335,36 @@ fun WebPortalScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // İndirme & Aksiyon Butonları
+                        // Web Üzerinden Hızlı Rol Girişleri
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
-                                onClick = { triggerDownload() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .testTag("portal_download_apk_btn"),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
+                            OutlinedButton(
+                                onClick = onOpenStudentDemo,
+                                modifier = Modifier.weight(1f).height(40.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, BrandPrimary)
                             ) {
-                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("📥 Cep Versiyonunu İndir (.APK)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("🎒 Öğrenci Girişi", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BrandPrimary)
                             }
 
                             OutlinedButton(
-                                onClick = { copyDownloadLink() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .testTag("portal_copy_link_btn"),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.5.dp, BrandPrimary)
+                                onClick = onOpenParentDemo,
+                                modifier = Modifier.weight(1f).height(40.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFFD97706))
                             ) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("📋 Bağlantıyı Kopyala", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = BrandPrimary)
+                                Text("👨‍👩‍👧 Veli Portalı", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                            }
+
+                            OutlinedButton(
+                                onClick = onOpenTeacherDemo,
+                                modifier = Modifier.weight(1f).height(40.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFF16A34A))
+                            ) {
+                                Text("👩‍🏫 Öğretmen", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF15803D))
                             }
                         }
                     }
@@ -338,68 +372,176 @@ fun WebPortalScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ==========================================
-                // 3. KAREKOD & KURULUM KARTI
-                // ==========================================
+                // =========================================================================
+                // 3. ÖZEL VE AYRICA OLUŞTURULAN "APK İNDİRME LİNKİ & BÖLÜMÜ"
+                // =========================================================================
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("portal_apk_download_card"),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    border = BorderStroke(2.dp, BrandPrimary),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(22.dp)
                     ) {
+                        // Kart Başlığı
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = BrandGoldBg,
-                                border = BorderStroke(1.dp, BrandGoldBorder),
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.QrCode, contentDescription = null, tint = BrandGold, modifier = Modifier.size(20.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = BrandPrimary,
+                                    modifier = Modifier.size(42.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Android, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Android APK Uygulamasını İndir",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 16.sp,
+                                        color = TextDark
+                                    )
+                                    Text(
+                                        text = "Uygulama arayüzü doğrudan telefonunuza kurulur",
+                                        fontSize = 11.sp,
+                                        color = TextMuted
+                                    )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = BrandPrimaryContainer,
+                                border = BorderStroke(1.dp, BrandBorderMint)
+                            ) {
                                 Text(
-                                    text = "📱 Telefon Kameranızla Tarayın & İndirin",
+                                    text = "v1.0 RESMİ APK",
+                                    color = BrandPrimary,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = TextDark
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
-                                Text(
-                                    text = "Kameranızı karekoda doğrultarak cep versiyonunu doğrudan telefonunuza indirin.",
-                                    fontSize = 11.sp,
-                                    color = TextMuted
-                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "Aşağıdaki doğrudan indirme butonuna basarak veya telefon kameranızla karekodu taratarak uygulamanın APK yükleme dosyasını hemen telefonunuza indirebilirsiniz.",
+                            fontSize = 12.sp,
+                            color = TextDark,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // APK Dosya Özellikleri Tablosu
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("📦 Paket:", fontSize = 11.sp, color = TextMuted)
+                                    Text("com.aistudio.studentresponsibility.vkyrwe", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextDark)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("💾 Dosya Adı:", fontSize = 11.sp, color = TextMuted)
+                                    Text("SorumlulukTakibi_v1.0.apk", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BrandPrimary)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("⚖️ Dosya Boyutu:", fontSize = 11.sp, color = TextMuted)
+                                    Text("~18 MB (Tamamen Yerel & Hızlı)", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("📱 Uyumluluk:", fontSize = 11.sp, color = TextMuted)
+                                    Text("Android 7.0 (Nougat) ve üzeri tüm cihazlar", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Gerçek ZXing Karekod
-                        Box(
+                        // Doğrudan İndirme Butonları (Ayrıca Link Oluşturma)
+                        Button(
+                            onClick = { triggerApkDownload() },
                             modifier = Modifier
-                                .shadow(4.dp, RoundedCornerShape(18.dp))
-                                .background(Color.White, RoundedCornerShape(18.dp))
-                                .padding(8.dp)
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("btn_direct_download_apk"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                         ) {
-                            QrCodeCanvas(
-                                content = mobileDownloadUrl,
-                                sizeDp = 180.dp,
-                                darkColor = Color(0xFF0F172A)
-                            )
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("📥 Doğrudan Android APK Dosyasını İndir", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { openWebVersionInBrowser() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .testTag("btn_open_web_in_browser"),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.5.dp, BrandPrimary)
+                            ) {
+                                Icon(Icons.Default.OpenInBrowser, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("🌐 Web Sürümü Aç", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = BrandPrimary)
+                            }
+
+                            OutlinedButton(
+                                onClick = { copyDownloadLink() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .testTag("btn_copy_download_link"),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.5.dp, Color(0xFF475569))
+                            ) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color(0xFF475569), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("📋 Linki Kopyala", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF475569))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // İndirme Bağlantısı Metin Kutusu
                         Surface(
                             shape = RoundedCornerShape(10.dp),
                             color = Color(0xFFF1F5F9),
@@ -410,15 +552,16 @@ fun WebPortalScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = mobileDownloadUrl,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF475569),
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 1
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("İndirme Bağlantısı:", fontSize = 10.sp, color = TextMuted, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = webAppUrl,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextDark,
+                                        maxLines = 1
+                                    )
+                                }
                                 TextButton(
                                     onClick = { copyDownloadLink() },
                                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
@@ -428,7 +571,36 @@ fun WebPortalScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Karekod Bölümü
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "📱 Telefon Kameranızla Tarayın & Doğrudan İndirin",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = TextDark
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .shadow(4.dp, RoundedCornerShape(18.dp))
+                                    .background(Color.White, RoundedCornerShape(18.dp))
+                                    .padding(8.dp)
+                            ) {
+                                QrCodeCanvas(
+                                    content = webAppUrl,
+                                    sizeDp = 170.dp,
+                                    darkColor = Color(0xFF0F172A)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Kurulum Adımları
                         Surface(
@@ -438,16 +610,20 @@ fun WebPortalScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "💡 Cep Telefonuna Kurulum Adımları:",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = StatusSuccessText
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Security, contentDescription = null, tint = StatusSuccessText, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "APK Dosyası Telefona Nasıl Kurulur?",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = StatusSuccessText
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Text("1. Yukarıdaki 'İndir' butonuna basın veya karekodu telefonunuzla tarayın.", fontSize = 12.sp, color = StatusSuccessText)
-                                Text("2. İndirilen APK dosyasını açıp 'Yükle' seçeneğine dokunun.", fontSize = 12.sp, color = StatusSuccessText)
-                                Text("3. Uygulama telefonunuza yüklenir; tüm özellikleri mobil olarak kullanın!", fontSize = 12.sp, color = StatusSuccessText)
+                                Text("1. Yukarıdaki 'Doğrudan APK İndir' butonuna basın veya telefon kameranızla karekodu tarayın.", fontSize = 12.sp, color = StatusSuccessText)
+                                Text("2. İndirilen APK dosyasına dokunup 'Yükle' seçeneğine basın (Gerekirse 'Bu kaynaktan izin ver'i onaylayın).", fontSize = 12.sp, color = StatusSuccessText)
+                                Text("3. Kurulum saniyeler içinde tamamlanır; uygulama simgesi telefonunuzun ana ekranına eklenir.", fontSize = 12.sp, color = StatusSuccessText)
                             }
                         }
                     }
@@ -455,9 +631,9 @@ fun WebPortalScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // ==========================================
+                // =========================================================================
                 // 4. SİTEDEN ÇALIŞAN CANLI CEP TELEFONU SİMÜLATÖRÜ
-                // ==========================================
+                // =========================================================================
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -472,14 +648,14 @@ fun WebPortalScreen(
                                 Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Canlı Cep Telefonu Simülatörü",
+                                    text = "Siteden Çalışan Canlı Cep Simülatörü",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = TextDark
                                 )
                             }
                             Text(
-                                text = "Siteden çalışacak cep versiyonunu bu ekranda canlı test edebilirsiniz.",
+                                text = "İndireceğiniz cep telefonu arayüzünü web sitemiz üzerinden canlı test edin.",
                                 fontSize = 12.sp,
                                 color = TextMuted
                             )
@@ -586,7 +762,7 @@ fun WebPortalScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(Icons.Default.School, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                                                 Spacer(modifier = Modifier.width(6.dp))
-                                                Text("Din Keşif Atölyesi", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text("Sorumluluk & Değerler", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(12.dp),
@@ -786,7 +962,7 @@ fun WebPortalScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "📱 Bu simülatör, cep telefonunuza kuracağınız APK'nın birebir aynısıdır.",
+                        text = "📱 Bu simülatör, cep telefonunuza kuracağınız APK uygulamasının birebir aynısıdır.",
                         fontSize = 11.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center
@@ -795,9 +971,9 @@ fun WebPortalScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // ==========================================
+                // =========================================================================
                 // 5. DOĞRUDAN KAYIT & GİRİŞ KARTI
-                // ==========================================
+                // =========================================================================
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,

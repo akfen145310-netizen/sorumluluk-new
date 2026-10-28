@@ -24,11 +24,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.SupervisorAccount
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,6 +79,7 @@ fun RegistrationScreen(
     onOpenParentDemo: (() -> Unit)? = null,
     onOpenTeacherDemo: (() -> Unit)? = null,
     onOpenWebPortal: (() -> Unit)? = null,
+    onOpenDesktopWorkstation: (() -> Unit)? = null,
     onRegisterSuccess: (role: UserRole, fullName: String, linkedStudentName: String?) -> Unit,
     onVerifyTeacherPin: (String) -> Boolean,
     modifier: Modifier = Modifier
@@ -130,19 +133,36 @@ fun RegistrationScreen(
                             }
                         }
 
-                        if (onOpenWebPortal != null) {
-                            androidx.compose.material3.TextButton(
-                                onClick = onOpenWebPortal,
-                                modifier = Modifier.testTag("reg_open_web_portal_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Laptop,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Web Portalı & İndir", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (onOpenWebPortal != null) {
+                                androidx.compose.material3.TextButton(
+                                    onClick = onOpenWebPortal,
+                                    modifier = Modifier.testTag("reg_open_web_portal_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Language,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("Web & APK", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                            if (onOpenDesktopWorkstation != null) {
+                                androidx.compose.material3.TextButton(
+                                    onClick = onOpenDesktopWorkstation,
+                                    modifier = Modifier.testTag("reg_open_desktop_workstation_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Laptop,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1D4ED8),
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("Masaüstü", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1D4ED8))
+                                }
                             }
                         }
                     }

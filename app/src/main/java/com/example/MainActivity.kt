@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
@@ -72,6 +73,7 @@ import com.example.ui.screens.ParentScreen
 import com.example.ui.screens.RegistrationScreen
 import com.example.ui.screens.StudentDemoScreen
 import com.example.ui.screens.StudentScreen
+import com.example.ui.screens.DesktopWorkstationScreen
 import com.example.ui.screens.TeacherDemoScreen
 import com.example.ui.screens.TeacherScreen
 import com.example.ui.screens.WebPortalScreen
@@ -83,7 +85,8 @@ enum class IntroScreenState {
     PARENT_DEMO,
     TEACHER_DEMO,
     REGISTRATION,
-    WEB_PORTAL
+    WEB_PORTAL,
+    DESKTOP_WORKSTATION
 }
 
 class MainActivity : ComponentActivity() {
@@ -148,6 +151,7 @@ fun MainApp(
     var showQrRegisterDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showWebPortalView by remember { mutableStateOf(false) }
+    var isDesktopModeActive by remember { mutableStateOf(false) }
 
     LaunchedEffect(notificationMessage) {
         notificationMessage?.let { msg ->
@@ -173,6 +177,7 @@ fun MainApp(
                     onOpenParentDemo = { authScreenState = IntroScreenState.PARENT_DEMO },
                     onOpenTeacherDemo = { authScreenState = IntroScreenState.TEACHER_DEMO },
                     onOpenWebPortal = { authScreenState = IntroScreenState.WEB_PORTAL },
+                    onOpenDesktopWorkstation = { authScreenState = IntroScreenState.DESKTOP_WORKSTATION },
                     onNavigateToRegister = {
                         preselectedRole = UserRole.STUDENT
                         prefilledFullName = ""
@@ -250,9 +255,64 @@ fun MainApp(
                     onOpenTeacherDemo = {
                         authScreenState = IntroScreenState.TEACHER_DEMO
                     },
+                    onOpenDesktopWorkstation = {
+                        authScreenState = IntroScreenState.DESKTOP_WORKSTATION
+                    },
                     onNavigateToRegister = {
                         authScreenState = IntroScreenState.REGISTRATION
                     }
+                )
+            }
+
+            IntroScreenState.DESKTOP_WORKSTATION -> {
+                BackHandler {
+                    authScreenState = IntroScreenState.INTRO
+                }
+                DesktopWorkstationScreen(
+                    currentRole = preselectedRole ?: UserRole.STUDENT,
+                    activeUserName = if (prefilledFullName.isNotBlank()) prefilledFullName else "Öğrenci (Masaüstü)",
+                    studentProfile = studentProfile,
+                    allStudentProfiles = allStudentProfiles,
+                    selectedChildId = selectedChildId,
+                    onSelectChild = { viewModel.selectChild(it) },
+                    dailyTasks = dailyTasks,
+                    badges = badges,
+                    allTasks = allTasks,
+                    dailySchedule = dailySchedule,
+                    waitingApprovalLogs = waitingApprovalLogs,
+                    classmateStats = classmateStats,
+                    classroomConfig = classroomConfig,
+                    registeredUsers = registeredUsers,
+                    allActivities = allActivities,
+                    selectedCategoryFilter = selectedCategoryFilter,
+                    onCategoryFilterSelected = { viewModel.setCategoryFilter(it) },
+                    onStudentDoneClick = { taskId -> viewModel.markTaskAsDone(taskId) },
+                    onApproveTask = { taskId -> viewModel.approveTask(taskId) },
+                    onApproveAllWaitingTasks = { viewModel.approveAllWaitingTasks() },
+                    onRejectTask = { taskId, reason -> viewModel.rejectTask(taskId, reason) },
+                    onStartCustomizingSchedule = { viewModel.startCustomizingSchedule() },
+                    onCancelCustomizingSchedule = { viewModel.cancelCustomizingSchedule() },
+                    onToggleCustomTask = { task -> viewModel.toggleCustomTaskSelection(task) },
+                    onSaveCustomSchedule = { viewModel.saveCustomSchedule() },
+                    onResetToTeacherSchedule = { viewModel.resetToTeacherSchedule() },
+                    onUpdateMonthlyReward = { title, target -> viewModel.updateMonthlyReward(title, target) },
+                    onUpdateClassroomInfo = { cName, sub, act, jCode, pin, announcement -> viewModel.updateClassroomInfo(cName, sub, act, jCode, pin, announcement) },
+                    onAddActivity = { title, desc, jCode, days -> viewModel.addActivity(title, desc, jCode, days) },
+                    onSetActiveActivity = { actId, title -> viewModel.setActiveActivity(actId, title) },
+                    onDeleteActivity = { actId, title -> viewModel.deleteActivity(actId, title) },
+                    onCompleteTaskForStudents = { studentIds, taskId, taskTitle, diamonds -> viewModel.completeTaskForStudents(studentIds, taskId, taskTitle, diamonds) },
+                    onDeleteRegisteredUser = { userId -> viewModel.deleteRegisteredUser(userId) },
+                    onDeleteStudent = { studentId, studentName -> viewModel.deleteStudent(studentId, studentName) },
+                    onSwitchRole = { newRole ->
+                        preselectedRole = newRole
+                        viewModel.switchRole(newRole)
+                    },
+                    onNavigateToMobile = {
+                        authScreenState = IntroScreenState.REGISTRATION
+                    },
+                    onOpenWebPortal = { authScreenState = IntroScreenState.WEB_PORTAL },
+                    onSyncData = { viewModel.refreshToday() },
+                    onOpenSettings = { showSettingsDialog = true }
                 )
             }
 
@@ -280,6 +340,7 @@ fun MainApp(
                             onOpenParentDemo = { authScreenState = IntroScreenState.PARENT_DEMO },
                             onOpenTeacherDemo = { authScreenState = IntroScreenState.TEACHER_DEMO },
                             onOpenWebPortal = { authScreenState = IntroScreenState.WEB_PORTAL },
+                            onOpenDesktopWorkstation = { authScreenState = IntroScreenState.DESKTOP_WORKSTATION },
                             onRegisterSuccess = { role, fullName, linkedStudentName ->
                                 viewModel.setDontShowIntroAgain(true)
                                 viewModel.registerAndStartRole(role, fullName, linkedStudentName)
@@ -341,7 +402,7 @@ fun MainApp(
 
                                     Column {
                                         Text(
-                                            text = classroomConfig?.className ?: "Din Keşif Atölyesi",
+                                            text = classroomConfig?.className ?: "Sorumluluk & Değerler Eğitimi",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = com.example.ui.theme.TextDark,
@@ -456,6 +517,26 @@ fun MainApp(
                                         }
                                     }
 
+                                    // Dedicated Desktop Workstation Button (Masaüstü Versiyonu)
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isDesktopModeActive) com.example.ui.theme.BrandPrimary else com.example.ui.theme.BrandPrimaryContainer,
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, com.example.ui.theme.BrandBorderMint),
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    ) {
+                                        IconButton(
+                                            onClick = { isDesktopModeActive = !isDesktopModeActive },
+                                            modifier = Modifier.size(36.dp).testTag("topbar_desktop_workstation_btn")
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isDesktopModeActive) Icons.Default.PhoneAndroid else Icons.Default.Laptop,
+                                                contentDescription = if (isDesktopModeActive) "Cep Versiyonuna Geç" else "Masaüstü Versiyonuna Geç",
+                                                tint = if (isDesktopModeActive) Color.White else com.example.ui.theme.BrandPrimary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+
                                     // Dedicated Settings & Font Switcher Button
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
@@ -490,7 +571,55 @@ fun MainApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                if (showWebPortalView) {
+                if (isDesktopModeActive) {
+                    BackHandler {
+                        isDesktopModeActive = false
+                    }
+                    DesktopWorkstationScreen(
+                        currentRole = currentRole,
+                        activeUserName = activeUserName,
+                        studentProfile = studentProfile,
+                        allStudentProfiles = allStudentProfiles,
+                        selectedChildId = selectedChildId,
+                        onSelectChild = { viewModel.selectChild(it) },
+                        dailyTasks = dailyTasks,
+                        badges = badges,
+                        allTasks = allTasks,
+                        dailySchedule = dailySchedule,
+                        waitingApprovalLogs = waitingApprovalLogs,
+                        classmateStats = classmateStats,
+                        classroomConfig = classroomConfig,
+                        registeredUsers = registeredUsers,
+                        allActivities = allActivities,
+                        selectedCategoryFilter = selectedCategoryFilter,
+                        onCategoryFilterSelected = { viewModel.setCategoryFilter(it) },
+                        onStudentDoneClick = { taskId -> viewModel.markTaskAsDone(taskId) },
+                        onApproveTask = { taskId -> viewModel.approveTask(taskId) },
+                        onApproveAllWaitingTasks = { viewModel.approveAllWaitingTasks() },
+                        onRejectTask = { taskId, reason -> viewModel.rejectTask(taskId, reason) },
+                        onStartCustomizingSchedule = { viewModel.startCustomizingSchedule() },
+                        onCancelCustomizingSchedule = { viewModel.cancelCustomizingSchedule() },
+                        onToggleCustomTask = { task -> viewModel.toggleCustomTaskSelection(task) },
+                        onSaveCustomSchedule = { viewModel.saveCustomSchedule() },
+                        onResetToTeacherSchedule = { viewModel.resetToTeacherSchedule() },
+                        onUpdateMonthlyReward = { title, target -> viewModel.updateMonthlyReward(title, target) },
+                        onUpdateClassroomInfo = { cName, sub, act, jCode, pin, announcement -> viewModel.updateClassroomInfo(cName, sub, act, jCode, pin, announcement) },
+                        onAddActivity = { title, desc, jCode, days -> viewModel.addActivity(title, desc, jCode, days) },
+                        onSetActiveActivity = { actId, title -> viewModel.setActiveActivity(actId, title) },
+                        onDeleteActivity = { actId, title -> viewModel.deleteActivity(actId, title) },
+                        onCompleteTaskForStudents = { studentIds, taskId, taskTitle, diamonds -> viewModel.completeTaskForStudents(studentIds, taskId, taskTitle, diamonds) },
+                        onDeleteRegisteredUser = { userId -> viewModel.deleteRegisteredUser(userId) },
+                        onDeleteStudent = { studentId, studentName -> viewModel.deleteStudent(studentId, studentName) },
+                        onSwitchRole = { newRole -> viewModel.switchRole(newRole) },
+                        onNavigateToMobile = { isDesktopModeActive = false },
+                        onOpenWebPortal = {
+                            isDesktopModeActive = false
+                            showWebPortalView = true
+                        },
+                        onSyncData = { viewModel.refreshToday() },
+                        onOpenSettings = { showSettingsDialog = true }
+                    )
+                } else if (showWebPortalView) {
                     BackHandler {
                         showWebPortalView = false
                     }
@@ -512,6 +641,10 @@ fun MainApp(
                         },
                         onNavigateToRegister = {
                             showWebPortalView = false
+                        },
+                        onOpenDesktopWorkstation = {
+                            showWebPortalView = false
+                            isDesktopModeActive = true
                         }
                     )
                 } else {
